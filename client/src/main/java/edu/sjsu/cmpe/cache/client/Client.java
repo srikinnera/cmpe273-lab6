@@ -1,18 +1,46 @@
 package edu.sjsu.cmpe.cache.client;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.*;
+
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 public class Client {
-
+    
     public static void main(String[] args) throws Exception {
         System.out.println("Starting Cache Client...");
-        CacheServiceInterface cache = new DistributedCacheService(
+        ArrayList<CacheServiceInterface> cacheList = new ArrayList<CacheServiceInterface>();
+        CacheServiceInterface cache1 = new DistributedCacheService(
                 "http://localhost:3000");
 
-        cache.put(1, "foo");
-        System.out.println("put(1 => foo)");
+        CacheServiceInterface cache2 = new DistributedCacheService(      		
+                "http://localhost:3001");
 
-        String value = cache.get(1);
-        System.out.println("get(1) => " + value);
-
+        CacheServiceInterface cache3 = new DistributedCacheService("http://localhost:3002");
+        CacheServiceInterface dummy;
+       
+        cacheList.add(cache1);
+        cacheList.add(cache2);
+        cacheList.add(cache3);
+        ConsistentHash<CacheServiceInterface> consistentHash = new ConsistentHash(Hashing.md5(), cacheList);
+        int i = 1;
+		//int bucket = Hashing.consistentHash(Hashing.md5(),
+        //int bucket = Hashing.ConsistentHash(Hashing.md5(),100,cachelist.size()); 
+        for (CacheServiceInterface csi : cacheList)
+        	 consistentHash.add(csi);
+        
+        String value;
+        String str[] = {"x", "a","b","c","d","e","f","g","h","i","j"};
+        for(i=1;i<10;i++){
+        dummy = consistentHash.get(i);
+        dummy.put(i,str[i]);
+        value = dummy.get(i);
+        System.out.println("get("+i+") => " + value);
+        }
+        
+        int count = cacheList.size(); 
+        
         System.out.println("Existing Cache Client...");
     }
 
